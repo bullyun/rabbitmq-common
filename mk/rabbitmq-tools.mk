@@ -120,10 +120,17 @@ travis-yml:
 	$(gen_verbose) $(replace_aws_creds)
 else
 travis-yml:
-	$(gen_verbose) ! test -f .travis.yml || \
-	(grep -E -- '- secure:' .travis.yml || :) > .travis.yml.creds
-	$(verbose) cp -a $(DEPS_DIR)/rabbit_common/.travis.yml .travis.yml.orig
-	$(verbose) awk ' \
+	$(gen_verbose) \
+	set -e; \
+	if test -d .git && test -d $(DEPS_DIR)/rabbit_common/.git; then \
+		upstream_branch=$$(LANG=C git -C $(DEPS_DIR)/rabbit_common branch --list | awk '/^\* \(.*detached / {ref=$$0; sub(/.*detached [^ ]+ /, "", ref); sub(/\)$$/, "", ref); print ref; exit;} /^\* / {ref=$$0; sub(/^\* /, "", ref); print ref; exit}'); \
+		local_branch=$$(LANG=C git branch --list | awk '/^\* \(.*detached / {ref=$$0; sub(/.*detached [^ ]+ /, "", ref); sub(/\)$$/, "", ref); print ref; exit;} /^\* / {ref=$$0; sub(/^\* /, "", ref); print ref; exit}'); \
+		test "$$local_branch" = "$$upstream_branch" || exit 0; \
+	fi; \
+	test -f .travis.yml || exit 0; \
+	(grep -E -- '- secure:' .travis.yml || :) > .travis.yml.creds; \
+	cp -a $(DEPS_DIR)/rabbit_common/.travis.yml .travis.yml.orig; \
+	awk ' \
 	/^  global:/ { \
 	  print; \
 	  system("test -f .travis.yml.creds && cat .travis.yml.creds"); \
@@ -131,16 +138,16 @@ travis-yml:
 	} \
 	/- secure:/ { next; } \
 	{ print; } \
-	' < .travis.yml.orig > .travis.yml
-	$(verbose) rm -f .travis.yml.orig .travis.yml.creds
-	$(verbose) set -e; \
+	' < .travis.yml.orig > .travis.yml; \
+	rm -f .travis.yml.orig .travis.yml.creds; \
 	if test -f .travis.yml.patch; then \
 		patch -p0 < .travis.yml.patch; \
 		rm -f .travis.yml.orig; \
-	fi
-	$(verbose) $(replace_aws_creds)
+	fi; \
+	$(replace_aws_creds)
 ifeq ($(DO_COMMIT),yes)
-	$(verbose) git diff --quiet .travis.yml \
+	$(verbose) ! test -f .travis.yml || \
+	git diff --quiet .travis.yml \
 	|| git commit -m 'Travis CI: Update config from rabbitmq-common' .travis.yml
 endif
 endif

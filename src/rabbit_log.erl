@@ -89,8 +89,6 @@ debug(Format) -> debug(Format, []).
 debug(Format, Args) -> debug(self(), Format, Args).
 debug(Metadata, Format, Args) ->
     lager:log(?LAGER_SINK, debug, Metadata, Format, Args).
-%%    Metadata,Format,Args,
-%%    'ok'.
 
 info(Format) -> info(Format, []).
 info(Format, Args) -> info(self(), Format, Args).

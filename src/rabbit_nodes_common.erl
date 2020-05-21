@@ -53,9 +53,7 @@ names(Hostname) ->
     end.
 
 make({Prefix, Suffix}) -> list_to_atom(lists:append([Prefix, "@", Suffix]));
-make(NodeStr)          ->
-    rabbit_log:info("aaaaaaaaaaaaaaa ~p", [NodeStr]),
-    make(parts(NodeStr)).
+make(NodeStr)          -> make(parts(NodeStr)).
 
 parts(Node) when is_atom(Node) ->
     parts(atom_to_list(Node));
