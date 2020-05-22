@@ -95,7 +95,9 @@ debug(Metadata, Format, Args) ->
 info(Format) -> info(Format, []).
 info(Format, Args) -> info(self(), Format, Args).
 info(Metadata, Format, Args) ->
-    lager:log(?LAGER_SINK, info, Metadata, Format, Args).
+%%    lager:log(?LAGER_SINK, info, Metadata, Format, Args).
+    Metadata, Format, Args,
+    ok.
 
 notice(Format) -> notice(Format, []).
 notice(Format, Args) -> notice(self(), Format, Args).
